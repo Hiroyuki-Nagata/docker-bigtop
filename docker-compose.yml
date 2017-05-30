@@ -1,0 +1,7 @@
+bigtop:
+  image: hiroyuking/docker-bigtop:latest
+  environment:
+    COMPOSE_HTTP_TIMEOUT: 200
+  tty: true
+  ports:
+    - "10000:10000"
