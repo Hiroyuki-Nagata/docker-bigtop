@@ -26,11 +26,12 @@ RUN wget -O /etc/apt/sources.list.d/bigtop-1.2.0.list http://archive.apache.org/
 RUN apt-get -y update
 
 # Install bigtop-utils
-RUN apt-get -y install bigtop-utils
+RUN apt-get -y install bigtop-utils hadoop\*
+# Get supervisor, sudo
+RUN apt-get install -y supervisor sudo libpam-modules-bin
 
 # Install the full Hadoop stack (or parts of it)
-# You can add flume-* oozie\*
-RUN apt-get -y install hadoop\* hive\*
+# You can add flume-* oozie\* hive\*
 
 # Format the namenode for the first time
 RUN /etc/init.d/hadoop-hdfs-namenode init
@@ -39,11 +40,22 @@ RUN /etc/init.d/hadoop-hdfs-namenode init
 RUN mkdir -p /var/run/hive
 RUN mkdir -p /var/lock/subsys
 
-# Get supervisor, sudo
-RUN apt-get install -y supervisor sudo libpam-modules-bin
-
 # Prepare "hadoop" user with "hdfs" group
 RUN mkhomedir_helper hdfs
+
+# Get hive modules
+RUN wget -O /tmp/apache-hive-2.1.1-bin.tar.gz http://www-us.apache.org/dist/hive/hive-2.1.1/apache-hive-2.1.1-bin.tar.gz
+RUN tar xvzf /tmp/apache-hive-2.1.1-bin.tar.gz -C /usr/local
+
+RUN echo ""                                                        >> /etc/bash.bashrc
+RUN echo "export HIVE_HOME=/usr/local/apache-hive-2.1.1-bin"	   >> /etc/bash.bashrc
+RUN echo "export HIVE_CONF_DIR=\$HIVE_HOME/conf"		   >> /etc/bash.bashrc
+RUN echo "export PATH=\$PATH:\$HIVE_HOME/bin"			   >> /etc/bash.bashrc
+RUN echo "export CLASSPATH=\$CLASSPATH:/usr/local/hadoop/lib/*:."  >> /etc/bash.bashrc
+RUN echo "export CLASSPATH=\$CLASSPATH:\$HIVE_HOME/lib/*:."	   >> /etc/bash.bashrc
+
+RUN echo ""							   >> /var/lib/hadoop-hdfs/.bashrc
+RUN echo "export PATH=\$PATH:\$HIVE_HOME/bin"			   >> /var/lib/hadoop-hdfs/.bashrc
 
 ## Running
 ADD supervisord.conf /etc/supervisord.conf
