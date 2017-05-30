@@ -48,14 +48,27 @@ RUN wget -O /tmp/apache-hive-2.1.1-bin.tar.gz http://www-us.apache.org/dist/hive
 RUN tar xvzf /tmp/apache-hive-2.1.1-bin.tar.gz -C /usr/local
 
 RUN echo ""                                                        >> /etc/bash.bashrc
+RUN echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64"  >> /etc/bash.bashrc
 RUN echo "export HIVE_HOME=/usr/local/apache-hive-2.1.1-bin"	   >> /etc/bash.bashrc
 RUN echo "export HIVE_CONF_DIR=\$HIVE_HOME/conf"		   >> /etc/bash.bashrc
 RUN echo "export PATH=\$PATH:\$HIVE_HOME/bin"			   >> /etc/bash.bashrc
 RUN echo "export CLASSPATH=\$CLASSPATH:/usr/local/hadoop/lib/*:."  >> /etc/bash.bashrc
 RUN echo "export CLASSPATH=\$CLASSPATH:\$HIVE_HOME/lib/*:."	   >> /etc/bash.bashrc
+RUN echo "export HADOOP_HOME=/usr/lib/hadoop"                      >> /etc/bash.bashrc
 
-RUN echo ""							   >> /var/lib/hadoop-hdfs/.bashrc
+RUN echo "alias ll='ls -l'"                                        >> /etc/bash.bashrc
+RUN echo "alias la='ls -A'"                                        >> /etc/bash.bashrc
+RUN echo "alias l='ls -CF'"                                        >> /etc/bash.bashrc
+
 RUN echo "export PATH=\$PATH:\$HIVE_HOME/bin"			   >> /var/lib/hadoop-hdfs/.bashrc
+
+# Setting hive module
+RUN apt-get install -y derby-tools libderby-java libderbyclient-java
+RUN mkdir -p /var/lib/hive/metastore/
+RUN chown -R hdfs:hadoop /var/lib/hive/metastore/
+RUN chown -R hdfs:hadoop /usr/local/apache-hive-2.1.1-bin/
+COPY hive-site.xml /usr/local/apache-hive-2.1.1-bin/conf/
+RUN sudo -u hdfs /usr/local/apache-hive-2.1.1-bin/bin/schematool -dbType derby -initSchema
 
 ## Running
 ADD supervisord.conf /etc/supervisord.conf
